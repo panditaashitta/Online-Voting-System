@@ -1,0 +1,204 @@
+OnlineVotingSystem.java
+import java.io.*;
+import java.util.*;
+
+class User {
+    String username;
+    String password;
+    boolean hasVoted;
+
+    User(String username, String password) {
+        this.username = username;
+        this.password = password;
+        this.hasVoted = false;
+    }
+}
+
+class Candidate {
+    String name;
+    int votes;
+
+    Candidate(String name) {
+        this.name = name;
+        this.votes = 0;
+    }
+}
+
+public class OnlineVotingSystem {
+    private static final String USER_FILE = "users.txt";
+    private static final String CANDIDATE_FILE = "candidates.txt";
+    private static List<User> users = new ArrayList<>();
+    private static List<Candidate> candidates = new ArrayList<>();
+    private static Scanner scanner = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        loadUsers();
+        loadCandidates();
+
+        while (true) {
+            System.out.println("\n1. Register\n2. Login\n3. Admin Login\n4. Exit");
+            System.out.print("Choose an option: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+
+            switch (choice) {
+                case 1:
+                    registerUser();
+                    break;
+                case 2:
+                    loginUser();
+                    break;
+                case 3:
+                    adminLogin();
+                    break;
+                case 4:
+                    saveUsers();
+                    saveCandidates();
+                    System.out.println("Exiting...");
+                    return;
+                default:
+                    System.out.println("Invalid choice. Try again.");
+            }
+        }
+    }
+
+    private static void registerUser() {
+        System.out.print("Enter username: ");
+        String username = scanner.nextLine();
+        System.out.print("Enter password: ");
+        String password = scanner.nextLine();
+
+        users.add(new User(username, password));
+        System.out.println("Registration successful!");
+    }
+
+    private static void loginUser() {
+        System.out.print("Enter username: ");
+        String username = scanner.nextLine();
+        System.out.print("Enter password: ");
+        String password = scanner.nextLine();
+
+        for (User user : users) {
+            if (user.username.equals(username) && user.password.equals(password)) {
+                if (user.hasVoted) {
+                    System.out.println("You have already voted.");
+                } else {
+                    vote(username);
+                }
+                return;
+            }
+        }
+        System.out.println("Invalid username or password.");
+    }
+
+    private static void vote(String username) {
+        System.out.println("\nCandidates:");
+        for (int i = 0; i < candidates.size(); i++) {
+            System.out.println((i + 1) + ". " + candidates.get(i).name);
+        }
+        System.out.print("Enter candidate number to vote: ");
+        int choice = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        if (choice > 0 && choice <= candidates.size()) {
+            candidates.get(choice - 1).votes++;
+            for (User user : users) {
+                if (user.username.equals(username)) {
+                    user.hasVoted = true;
+                    break;
+                }
+            }
+            System.out.println("Vote recorded successfully!");
+        } else {
+            System.out.println("Invalid candidate number.");
+        }
+    }
+
+    private static void adminLogin() {
+        System.out.print("Enter admin username: ");
+        String username = scanner.nextLine();
+        System.out.print("Enter admin password: ");
+        String password = scanner.nextLine();
+
+        if (username.equals("admin") && password.equals("admin123")) {
+            System.out.println("\n1. Add Candidate\n2. View Results\n3. Back");
+            System.out.print("Choose an option: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+
+            switch (choice) {
+                case 1:
+                    addCandidate();
+                    break;
+                case 2:
+                    viewResults();
+                    break;
+                case 3:
+                    break;
+                default:
+                    System.out.println("Invalid choice.");
+            }
+        } else {
+            System.out.println("Invalid admin credentials.");
+        }
+    }
+
+    private static void addCandidate() {
+        System.out.print("Enter candidate name: ");
+        String name = scanner.nextLine();
+        candidates.add(new Candidate(name));
+        System.out.println("Candidate added successfully!");
+    }
+
+    private static void viewResults() {
+        System.out.println("\nElection Results:");
+        for (Candidate candidate : candidates) {
+            System.out.println(candidate.name + ": " + candidate.votes + " votes");
+        }
+    }
+
+    private static void loadUsers() {
+        try (BufferedReader reader = new BufferedReader(new FileReader(USER_FILE))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                users.add(new User(parts[0], parts[1]));
+            }
+        } catch (IOException e) {
+            System.out.println("No user data found. Starting with an empty list.");
+        }
+    }
+
+    private static void saveUsers() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(USER_FILE))) {
+            for (User user : users) {
+                writer.write(user.username + "," + user.password + "," + user.hasVoted + "\n");
+            }
+        } catch (IOException e) {
+            System.out.println("Error saving user data.");
+        }
+    }
+
+    private static void loadCandidates() {
+        try (BufferedReader reader = new BufferedReader(new FileReader(CANDIDATE_FILE))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                candidates.add(new Candidate(line));
+            }
+        } catch (IOException e) {
+            System.out.println("No candidate data found. Starting with an empty list.");
+        }
+    }
+
+    private static void saveCandidates() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(CANDIDATE_FILE))) {
+            for (Candidate candidate : candidates) {
+                writer.write(candidate.name + "\n");
+            }
+        } catch (IOException e) {
+            System.out.println("Error saving candidate data.");
+        }
+    }
+}
+    
+
